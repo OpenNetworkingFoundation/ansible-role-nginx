@@ -1,0 +1,120 @@
+# nginx templates/vhost.conf.j2 - {{ ansible_managed }}
+#
+# SPDX-FileCopyrightText: © 2020 Open Networking Foundation <support@opennetworking.org>
+# SPDX-License-Identifier: Apache-2.0
+
+{% if item.aliases is defined %}
+# Redirection of aliases to canonical URL
+server {
+  server_name {{ item.aliases | join(" ") }};
+
+  listen           {{ item.insecure_port | default("80") }};
+  listen      [::]:{{ item.insecure_port | default("80") }};
+{% if item.tls is defined and item.tls %}
+  listen           {{ item.secure_port | default("443") }} ssl http2;
+  listen      [::]:{{ item.secure_port | default("443") }} ssl http2;
+
+  ssl_certificate {{ certificate_dir }}/{{ item.cert_name | default(item.name) }}/fullchain.pem;
+  ssl_certificate_key {{ certificate_dir }}/{{ item.cert_name | default(item.name) }}/privkey.pem;
+{% endif %}
+
+  # serve ACME Challenges
+  location /.well-known/acme-challenge {
+    root {{ acme_challenge_dir }};
+  }
+
+{% if item.strip_request_uri is defined and item.strip_request_uri %}
+{% set uri = "" %}
+{% else %}
+{% set uri = "$request_uri" %}
+{% endif %}
+  location / {
+    return      301 {{ item.redirect_url | default("https://" ~ item.name) }}{{ uri }};
+  }
+}
+
+{% endif %}
+{% if item.redirect_url is not defined %}
+{% if item.tls is defined and item.tls %}
+# HTTP -> HTTPS redirect
+server {
+  server_name {{ item.name }};
+
+  listen           {{ item.insecure_port | default("80") }}{% if item.default_server is defined and item.default_server %} default_server{% endif %};
+  listen      [::]:{{ item.insecure_port | default("80") }}{% if item.default_server is defined and item.default_server %} default_server{% endif %};
+
+  # serve ACME Challenges
+  location /.well-known/acme-challenge {
+    root {{ acme_challenge_dir }};
+  }
+
+  location / {
+    return      301 https://{{ item.name }}$request_uri;
+  }
+}
+
+{% endif %}
+# Server with content
+server {
+  server_name {{ item.name }};
+
+  # Listening ports
+{% if item.tls is defined and item.tls %}
+  listen           {{ item.secure_port | default("443") }} ssl http2 {% if item.default_server is defined and item.default_server %} default_server{% endif %};
+  listen      [::]:{{ item.secure_port | default("443") }} ssl http2 {% if item.default_server is defined and item.default_server %} default_server{% endif %};
+
+  ssl_certificate {{ certificate_dir }}/{{ item.cert_name | default(item.name) }}/fullchain.pem;
+  ssl_certificate_key {{ certificate_dir }}/{{ item.cert_name | default(item.name) }}/privkey.pem;
+{% else %}
+  listen           {{ item.insecure_port | default("80") }}{% if item.default_server is defined and item.default_server %} default_server{% endif %};
+  listen      [::]:{{ item.insecure_port | default("80") }}{% if item.default_server is defined and item.default_server %} default_server{% endif %};
+
+  # serve ACME Challenges
+  location /.well-known/acme-challenge {
+    root {{ acme_challenge_dir }};
+  }
+{% endif %}
+
+  # logfile locations
+  access_log {{ nginx_log_dir }}/{{ item.name }}_access.log;
+  error_log  {{ nginx_log_dir }}/{{ item.name }}_error.log;
+
+{% if item.extra_config is defined and item.extra_config %}
+  # extra config
+  {{ item.extra_config | indent(2) }}
+
+{% endif %}
+  location / {
+{% if item.auth_scope is defined and item.auth_scope %}
+    auth_basic "{{ item.auth_scope }}";
+    auth_basic_user_file "{{ nginx_auth_basic_dir }}/{{ item.auth_scope }}.htpasswd";
+{% endif %}
+{% if item.proxy_pass is not defined or not item.proxy_pass %}
+  # Static site configuration
+{% if item.custom_root is defined and item.custom_root %}
+    root  {{ item.custom_root }};
+{% else %}
+    root  {{ nginx_static_dir }}/{{ item.name }};
+{% endif %}
+    index index.html index.htm;
+{% if item.autoindex is defined and item.autoindex %}
+    autoindex on;
+    autoindex_exact_size on;
+{% endif %}
+{% else %}
+  # Proxy configuration
+    proxy_pass            {{ item.proxy_pass }};
+    proxy_buffering       off;
+    proxy_http_version    1.1;
+    proxy_read_timeout    60;
+    proxy_connect_timeout 90;
+
+    proxy_set_header      Host              $host;
+    proxy_set_header      X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header      X-Forwarded-Proto $scheme;
+    proxy_set_header      X-Real-IP         $remote_addr;
+    proxy_set_header      Accept-Encoding   "";
+{% endif %}
+  }
+}
+{% endif %}

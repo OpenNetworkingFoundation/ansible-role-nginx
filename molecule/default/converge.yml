@@ -1,0 +1,43 @@
+---
+# nginx molecule/default/verify.yml
+#
+# SPDX-FileCopyrightText: © 2020 Open Networking Foundation <support@opennetworking.org>
+# SPDX-License-Identifier: Apache-2.0
+
+- name: Converge
+  hosts: all
+  vars:
+    acme_username: "www-data"  # make independent of the acme role
+    vhosts:
+      - name: "static.example.com"
+        default_server: true
+        extra_config: |
+          location /teapot {
+            return 418;
+          }
+      - name: "autoindex.example.com"
+        autoindex: true
+      - name: "authenticated.example.com"
+        auth_scope: "mysite"
+      - name: "proxy.example.com"
+        proxy_pass: "http://localhost:8000"
+      - name: "redirects"
+        aliases:
+          - "redirect.example.com"
+        redirect_url: "https://destination.example.com"
+        strip_request_uri: true
+    auth_scopes:
+      - scope: mysite
+        users:
+          - name: ghopper
+            password: verysecurepassword
+          - name: dknuth
+            password: anotherpassword
+      - scope: othersite
+        users:
+          - name: aturing
+            password: yetanotherpw
+  tasks:
+    - name: "Include nginx"
+      include_role:
+        name: "nginx"

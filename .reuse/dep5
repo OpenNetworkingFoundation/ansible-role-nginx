@@ -1,0 +1,14 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+# from: https://github.com/mozilla/ssl-config-generator/blob/master/src/static/ffdhe2048.txt
+Files: files/ffdhe2048.txt
+Copyright: 2019 Mozilla
+License: MPL-2.0
+
+Files: files/nginx_signing.key
+Copyright: 2020 Nginx, Inc.
+License: BSD-2-Clause
+
+Files: .cookiecutter_params.json VERSION .gitreview
+Copyright: 2020 Open Networking Foundation
+License: Apache-2.0

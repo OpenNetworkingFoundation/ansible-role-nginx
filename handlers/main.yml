@@ -1,0 +1,28 @@
+---
+# nginx handlers/main.yml
+#
+# SPDX-FileCopyrightText: © 2020 Open Networking Foundation <support@opennetworking.org>
+# SPDX-License-Identifier: Apache-2.0
+
+- name: test-nginx-config
+  # test that the entire set of config files are correct
+  #
+  # NOTE: handlers are run in the order they are listed in this file, so it's
+  # listed first before starting/reloading/restarting the daemon
+  command:
+    cmd: "nginx -t -c {{ nginx_conf_dir }}/nginx.conf"
+
+- name: start-nginx
+  service:
+    name: "{{ nginx_service }}"
+    state: started
+
+- name: reload-nginx
+  service:
+    name: "{{ nginx_service }}"
+    state: reloaded
+
+- name: restart-nginx
+  service:
+    name: "{{ nginx_service }}"
+    state: restarted

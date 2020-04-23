@@ -1,0 +1,62 @@
+# nginx templates/nginx.conf.j2 - {{ ansible_managed }}
+#
+# SPDX-FileCopyrightText: © 2020 Open Networking Foundation <support@opennetworking.org>
+# SPDX-License-Identifier: Apache-2.0
+
+user {{ nginx_username }};
+
+pid {{ nginx_pid_file }};
+
+worker_processes {{ nginx_conf_worker_processes }};
+
+include {{ nginx_conf_dir }}/modules-enabled/*.conf;
+
+events {
+  worker_connections {{ nginx_conf_worker_connections }};
+  multi_accept {{ nginx_conf_multi_accept }};
+}
+
+http {
+  # Basic Settings
+  sendfile on;
+  tcp_nopush on;
+  tcp_nodelay on;
+  keepalive_timeout 65;
+  types_hash_max_size 2048;
+
+  client_max_body_size {{ nginx_conf_client_max_body_size }};
+
+  # MIME Types
+  include {{ nginx_conf_dir }}/mime.types;
+  # YAML has official MIME type defined: http://www.iana.org/assignments/media-types/media-types.xhtml
+  # but many other websites (GitHub, etc.) use this type which displays YAML directly in the browser.
+  types {
+    text/yaml yaml yml;
+  }
+  default_type application/octet-stream;
+
+  # SSL Settings
+  # from https://ssl-config.mozilla.org/
+  ssl_session_cache   shared:SSL:10m;
+  ssl_session_timeout 1d;
+  ssl_session_tickets off;
+
+  ssl_dhparam {{ nginx_conf_dir }}/dhparam;
+
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+  ssl_prefer_server_ciphers off;
+
+  # Logging Settings
+  access_log {{ nginx_log_dir }}/access.log;
+  error_log {{ nginx_log_dir }}/error.log;
+
+  # gzip Settings
+  gzip on;
+  gzip_proxied any;
+  gzip_types text/plain text/css text/javascript text/xml application/json application/javascript application/xml application/xml+rss;
+
+  # include Configuration and Enabled Sites
+  include {{ nginx_conf_dir }}/conf.d/*.conf;
+  include {{ nginx_conf_dir }}/sites-enabled/*;
+}

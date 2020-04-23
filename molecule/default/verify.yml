@@ -1,0 +1,203 @@
+---
+# nginx molecule/default/verify.yml
+#
+# SPDX-FileCopyrightText: © 2020 Open Networking Foundation <support@opennetworking.org>
+# SPDX-License-Identifier: Apache-2.0
+
+- name: Verify
+  hosts: all
+  vars:
+    nginx_static_dir: "/srv/sites"
+  tasks:
+
+    # Static site tests
+    - name: Create a test file to be served for the static site
+      lineinfile:
+        path: "{{ nginx_static_dir }}/static.example.com/index.html"
+        line: "This file is served from static.example.com"
+        mode: 0644
+        create: true
+
+    - name: Test that static site is being served with index.yaml
+      uri:
+        url: http://127.0.0.1/
+        headers:
+          Host: "static.example.com"
+        status_code: 200
+        return_content: true
+      register: webpage
+      failed_when: "'This file is served from static.example.com' not in webpage.content"
+
+    - name: Test that the static site is the default site
+      uri:
+        url: http://127.0.0.1/
+        status_code: 200
+        return_content: true
+      register: webpage
+      failed_when: "'This file is served from static.example.com' not in webpage.content"
+
+    - name: Delete static site test file
+      file:
+        path: "{{ nginx_static_dir }}/static.example.com/index.html"
+        mode: 0644
+        state: absent
+
+    - name: Verify that 403 is returned when no index.html file exists and autoindex is off
+      uri:
+        url: http://127.0.0.1/
+        headers:
+          Host: "static.example.com"
+        status_code: 403
+
+    - name: See if extra_config (teapot with code 418 at /teapot) is working
+      uri:
+        url: http://127.0.0.1/teapot
+        headers:
+          Host: "static.example.com"
+        status_code: 418
+
+    - name: Create a yaml file to check that MIME config is working
+      copy:
+        dest: "{{ nginx_static_dir }}/static.example.com/example.yaml"
+        mode: 0644
+        content: |
+          ---
+          # example YAML file
+
+    - name: Retrieve YAML file
+      uri:
+        url: http://127.0.0.1/example.yaml
+        headers:
+          Host: "static.example.com"
+        status_code: 200
+        return_content: true
+      register: webpagey
+
+    - name: Assert that yaml file uses text/yaml MIME type
+      assert:
+        that:
+          - webpagey['content_type'] == 'text/yaml'
+
+    - name: Delete yaml test file
+      file:
+        path: "{{ nginx_static_dir }}/static.example.com/example.yaml"
+        state: absent
+
+    # Test nginx autoindex
+    - name: Create a test dir to be served for the autoindex site
+      file:
+        path: "{{ nginx_static_dir }}/autoindex.example.com/autoindex_example_dir"
+        mode: 0755
+        state: directory
+
+    - name: Test that autoindex is created and lists directory
+      uri:
+        url: http://127.0.0.1/
+        headers:
+          Host: "autoindex.example.com"
+        status_code: 200
+        return_content: true
+      register: webpageai
+      failed_when: "'autoindex_example_dir' not in webpageai.content"
+
+    - name: Delete test dir for autoindex site
+      file:
+        path: "{{ nginx_static_dir }}/autoindex.example.com/autoindex_example_dir"
+        state: absent
+
+    # HTTP Basic Authentication tests
+    - name: Create a test file to be served for the authenticated site
+      lineinfile:
+        path: "{{ nginx_static_dir }}/authenticated.example.com/index.html"
+        line: "This file is served from authenticated.example.com"
+        mode: 0644
+        create: true
+
+    - name: Test that the authenticated file can't be accessed without authentication
+      uri:
+        url: http://127.0.0.1/
+        headers:
+          Host: "authenticated.example.com"
+        status_code: 401
+
+    - name: Test that the authenticated file can be accessed by authorized user
+      uri:
+        url: http://127.0.0.1/
+        url_username: "ghopper"
+        url_password: "verysecurepassword"
+        headers:
+          Host: "authenticated.example.com"
+        status_code: 200
+        return_content: true
+      register: webpage
+      failed_when: "'authenticated.example.com' not in webpage.content"
+
+    - name: Test that the authenticated file can't be accessed by unauthorized user
+      uri:
+        url: http://127.0.0.1/
+        url_username: "aturing"
+        url_password: "yetanotherpw"
+        headers:
+          Host: "authenticated.example.com"
+        status_code: 401
+
+    - name: Delete authenticated site test file
+      file:
+        path: "{{ nginx_static_dir }}/authenticated.example.com/index.html"
+        state: absent
+
+    # Proxy tests
+    - name: Verify that when proxy isn't running, NGINX returns a 502 "Bad Gateway" error
+      uri:
+        url: http://127.0.0.1/
+        headers:
+          Host: "proxy.example.com"
+        status_code: 502
+
+    - name: Create a test file to be served by the proxy
+      lineinfile:
+        path: "/tmp/index.html"
+        line: "This file is served from proxy.example.com"
+        mode: 0644
+        create: true
+
+    - name: Run a python http.server as proxy target for 20 seconds in the background
+      shell: >-
+        (cd /tmp;
+        python3 -m http.server & PY_PID=$!;
+        echo "server running: $PY_PID";
+        sleep 20;
+        kill $PY_PID) &
+      tags:
+        - skip_ansible_lint
+
+    - name: Wait 10 seconds for Python http.server to get started
+      pause:
+        seconds: 10
+
+    - name: Test that the proxy site is being served
+      uri:
+        url: http://127.0.0.1
+        headers:
+          Host: "proxy.example.com"
+        status_code: 200
+        return_content: true
+      register: webpage
+      failed_when: "'proxy.example.com' not in webpage.content"
+
+    - name: Delete proxy site test file
+      file:
+        path: "/tmp/index.html"
+        state: absent
+
+    # Redirect tests
+    - name: Check that 301 redirect is being served
+      uri:
+        url: http://127.0.0.1
+        headers:
+          Host: "redirect.example.com"
+        follow_redirects: "none"
+        status_code: 301
+        return_content: true
+      register: webpage
+      failed_when: "webpage.location != 'https://destination.example.com'"

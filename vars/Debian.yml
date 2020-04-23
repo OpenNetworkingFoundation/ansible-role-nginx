@@ -1,0 +1,31 @@
+---
+# nginx vars/Debian.yml
+#
+# SPDX-FileCopyrightText: © 2020 Open Networking Foundation <support@opennetworking.org>
+# SPDX-License-Identifier: Apache-2.0
+#
+# NOTE: Only put platform/OS-specific variables in this file.
+# Put all other variables in the 'defaults/main.yml' file.
+
+nginx_packages:
+  - "nginx"
+  - "python3-passlib"
+
+nginx_username: "www-data"
+nginx_groupname: "www-data"
+
+# name of the NGINX service
+nginx_service: "nginx"
+
+# Debian default settings
+nginx_conf_dir: "/etc/nginx"
+nginx_pid_file: "/run/nginx.pid"
+
+# logfile names must end in .log for logrotate (per /etc/logrotate.d/nginx)
+nginx_log_dir: "/var/log/nginx"
+
+# Not default. The /srv hierarchy is a good place for static sites.
+nginx_static_dir: "/srv/sites"
+
+# used for http basic auth .htpasswd files
+nginx_auth_basic_dir: "/srv/auth"

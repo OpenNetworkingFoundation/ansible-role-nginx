@@ -1,0 +1,41 @@
+---
+# nginx defaults/main.yml
+#
+# SPDX-FileCopyrightText: © 2020 Open Networking Foundation <support@opennetworking.org>
+# SPDX-License-Identifier: Apache-2.0
+
+# nginx_conf_* items go into the global nginx.conf file
+# Values set here are the same as default settings in nginx docs
+#
+# Upstream docs:
+#   http://nginx.org/en/docs/ngx_core_module.html
+#   http://nginx.org/en/docs/http/ngx_http_core_module.html
+
+# http://nginx.org/en/docs/ngx_core_module.html#worker_processes
+nginx_conf_worker_processes: "auto"
+
+# http://nginx.org/en/docs/ngx_core_module.html#worker_connections
+nginx_conf_worker_connections: 512
+
+# http://nginx.org/en/docs/ngx_core_module.html#multi_accept
+nginx_conf_multi_accept: "off"
+
+# http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+nginx_conf_client_max_body_size: "1m"
+
+# location of TLS certificates
+certificate_dir: "/etc/acme/certs"
+
+# webroot directory for acme challenges (aiso in acme/letsencrypt roles)
+acme_challenge_dir: "/etc/acme/challenges"
+
+# ACME software user name for setting permissions on challenge dir
+# NOTE: this will cause failures if you haven't previously run the the acme
+# role, so override it when that role isn't being used.
+acme_username: "acme"
+
+# vhosts is a list of virtualhosts to configure - see README.md
+vhosts: []
+
+# authentication scope dict to create htpasswd files - see README.md
+auth_scopes: {}

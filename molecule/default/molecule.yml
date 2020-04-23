@@ -1,0 +1,20 @@
+---
+# nginx molecule/default/molecule.yml
+#
+# SPDX-FileCopyrightText: © 2020 Open Networking Foundation <support@opennetworking.org>
+# SPDX-License-Identifier: Apache-2.0
+
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: "ubuntu-18.04-priv"
+    image: "quay.io/paulfantom/molecule-systemd:ubuntu-18.04"
+    privileged: true
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+provisioner:
+  name: ansible
+verifier:
+  name: ansible
