@@ -28,6 +28,14 @@
       register: webpage
       failed_when: "'This file is served from static.example.com' not in webpage.content"
 
+    - name: Test that bad user agents are blocked with 403
+      uri:
+        url: http://127.0.0.1/
+        headers:
+          Host: "static.example.com"
+          User-Agent: "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)"
+        status_code: 403
+
     - name: Test that the static site is the default site
       uri:
         url: http://127.0.0.1/

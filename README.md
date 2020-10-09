@@ -114,6 +114,9 @@ acme_challenge_dir: "/srv/acme"
 # NOTE: this will cause failures if you haven't previously run the the acme
 # role, so override it when that role isn't being used.
 acme_username: "acme"
+
+# block specific user agents (webscrapers)
+blocked_user_agents: "DotBot|MJ12bot|SemrushBot|PetalBot|AhrefsBot"
 ```
 
 The `vhosts` is used to define virtualhosts on the nginx server. This is a list

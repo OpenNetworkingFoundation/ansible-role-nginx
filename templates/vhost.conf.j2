@@ -79,6 +79,11 @@ server {
   access_log {{ nginx_log_dir }}/{{ item.name }}_access.log;
   error_log  {{ nginx_log_dir }}/{{ item.name }}_error.log;
 
+  # user agent (webscraper) blocks
+  if ($http_user_agent ~* {{ blocked_user_agents }}) {
+     return 403;
+  }
+
 {% if item.extra_config is defined and item.extra_config %}
   # extra config
   {{ item.extra_config | indent(2) }}

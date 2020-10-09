@@ -39,3 +39,6 @@ vhosts: []
 
 # authentication scope dict to create htpasswd files - see README.md
 auth_scopes: {}
+
+# block specific user agents (webscrapers)
+blocked_user_agents: "DotBot|MJ12bot|SemrushBot|PetalBot|AhrefsBot"
