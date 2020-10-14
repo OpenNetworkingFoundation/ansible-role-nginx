@@ -87,6 +87,14 @@ This is a bit of a chicken/egg problem. Here's one solution:
 Or, use DNS based challenges with `acme`, which don't depend on nginx serving
 the challenges.
 
+## PHP Support
+
+PHP via FastCGI can be enabled on a per-vhost basis by including:
+
+    php: true
+
+within the vhost definition. The `php` role must also be installed.
+
 ## Defaults
 
 There are several global config options, which apply to all sites being hosted.
@@ -139,6 +147,7 @@ vhosts:
       - www.example.com
     redirect_url: https://google.com  # destination for 301 redirection of the aliases
     strip_request_uri: true  # Set to true to strip off the path at the end of the URI when redirecting
+    php: false  # set to true if you want to enable PHP FastCGI support. Must install php role
     extra_config: |  # Extra arbitrary configuration to put inside the server {} block
       <arbitrary configuration>
 ```

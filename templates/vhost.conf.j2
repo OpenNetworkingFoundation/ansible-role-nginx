@@ -89,24 +89,53 @@ server {
   {{ item.extra_config | indent(2) }}
 
 {% endif %}
+{% if item.proxy_pass is not defined or not item.proxy_pass %}
+{% if item.custom_root is defined and item.custom_root %}
+  root  {{ item.custom_root }};
+{% else %}
+  root  {{ nginx_static_dir }}/{{ item.name }};
+{% endif %}
+{% if item.php is defined and item.php %}
+  index index.php;
+{% endif %}
   location / {
 {% if item.auth_scope is defined and item.auth_scope %}
     auth_basic "{{ item.auth_scope }}";
     auth_basic_user_file "{{ nginx_auth_basic_dir }}/{{ item.auth_scope }}.htpasswd";
 {% endif %}
-{% if item.proxy_pass is not defined or not item.proxy_pass %}
-  # Static site configuration
-{% if item.custom_root is defined and item.custom_root %}
-    root  {{ item.custom_root }};
+{% if item.php is defined and item.php %}
+  # PHP site configuration
+    try_files $uri $uri/ /index.php?$args;
 {% else %}
-    root  {{ nginx_static_dir }}/{{ item.name }};
-{% endif %}
+  # Static site indexes
     index index.html index.htm;
+{% endif %}
 {% if item.autoindex is defined and item.autoindex %}
     autoindex on;
     autoindex_exact_size on;
 {% endif %}
+{% if item.php is defined and item.php %}
+  }
+  # PHP configuration
+  location ~ [^/]\.php(/|$) {
+
+    fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+    if (!-f $document_root$fastcgi_script_name) {
+        return 404;
+    }
+    fastcgi_param HTTP_PROXY "";
+    fastcgi_pass unix:/var/run/php/php-fpm.sock;
+    fastcgi_index index.php;
+
+    # include the fastcgi_param setting
+    include fastcgi_params;
+{% endif %}
 {% else %}
+  location / {
+{% if item.auth_scope is defined and item.auth_scope %}
+    auth_basic "{{ item.auth_scope }}";
+    auth_basic_user_file "{{ nginx_auth_basic_dir }}/{{ item.auth_scope }}.htpasswd";
+{% endif %}
   # Proxy configuration
     proxy_pass            {{ item.proxy_pass }};
     proxy_buffering       off;

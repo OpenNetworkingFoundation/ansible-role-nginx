@@ -61,6 +61,16 @@
     group: "{{ nginx_groupname }}"
     mode: 0644
 
+# file from example on nginx wiki:
+#   https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/
+- name: Copy over fastcgi_params config file
+  copy:
+    src: "fastcgi_params"
+    dest: "{{ nginx_conf_dir }}/fastcgi_params"
+    owner: root
+    group: "{{ nginx_groupname }}"
+    mode: 0644
+
 - name: Global NGINX configuration from template
   template:
     src: "nginx.conf.j2"
