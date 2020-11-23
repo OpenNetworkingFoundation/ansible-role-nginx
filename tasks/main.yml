@@ -79,7 +79,7 @@
     group: "{{ nginx_groupname }}"
     mode: 0644
     backup: true
-    validate: "nginx -t -c %s"
+    #    validate: "nginx -t -c %s"
   notify:
     - test-nginx-config
     - reload-nginx
