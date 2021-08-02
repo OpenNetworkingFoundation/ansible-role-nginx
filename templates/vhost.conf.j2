@@ -24,6 +24,12 @@ server {
   }
 
 {% if item.strip_request_uri is defined and item.strip_request_uri %}
+{% if item.extra_config is defined and item.extra_config %}
+  # extra config
+  {{ item.extra_config | indent(2) }}
+
+{% endif %}
+
 {% set uri = "" %}
 {% else %}
 {% set uri = "$request_uri" %}

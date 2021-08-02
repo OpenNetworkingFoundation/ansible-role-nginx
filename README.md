@@ -59,7 +59,10 @@ not handle:
 - Complicated redirect rules. The grammar for these was too complicated to make
   into a general case, so if they're required use the `extra_config` which is
   loaded into the `server {}` configuration scope, and specify rules using the
-  [rewrite module](http://nginx.org/en/docs/http/ngx_http_rewrite_module.html)
+  [rewrite module](http://nginx.org/en/docs/http/ngx_http_rewrite_module.html).
+  `extra_config` also added to the config if `strip_request_uri` is set - this
+  handles a basic full-site redirect to another URL, along with any custom 301
+  redirects in `extra_config`
 
 - Wildcard matching of domains. These were generally done to host many sites
   behind one TLS certificate, which is less needed now that we have
