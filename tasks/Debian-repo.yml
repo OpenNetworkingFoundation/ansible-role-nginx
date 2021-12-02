@@ -1,0 +1,24 @@
+---
+# nginx tasks/Debian-repo.yml
+#
+# SPDX-FileCopyrightText: © 2021 Open Networking Foundation <support@opennetworking.org>
+# SPDX-License-Identifier: Apache-2.0
+
+- name: Install GPG to support adding apt repo keys
+  apt:
+    name: "gpg"
+    state: "present"
+    update_cache: true
+
+# Docs: http://nginx.org/en/linux_packages.html
+- name: Add NGINX apt repo key
+  apt_key:
+    data: "{{ lookup('file','nginx_signing.key') }}"
+    state: "present"
+
+- name: Add NGINX apt repo
+  apt_repository:
+    repo: >-
+      deb http://nginx.org/packages/{{ ansible_lsb['id'] | lower }}
+      {{ ansible_lsb['codename'] }} nginx
+    update_cache: true

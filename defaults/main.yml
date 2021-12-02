@@ -11,6 +11,9 @@
 #   http://nginx.org/en/docs/ngx_core_module.html
 #   http://nginx.org/en/docs/http/ngx_http_core_module.html
 
+# Set true to use nginx.org package repo
+nginx_add_package_repo: true
+
 # http://nginx.org/en/docs/ngx_core_module.html#worker_processes
 nginx_conf_worker_processes: "auto"
 
