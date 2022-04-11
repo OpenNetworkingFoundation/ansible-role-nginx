@@ -9,6 +9,6 @@ Files: files/nginx_signing.key
 Copyright: 2020 Nginx, Inc.
 License: BSD-2-Clause
 
-Files: .cookiecutter_params.json VERSION .gitreview
+Files: .cookiecutter_params.json VERSION .gitreview README.md
 Copyright: 2020 Open Networking Foundation
 License: Apache-2.0

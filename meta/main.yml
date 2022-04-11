@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 galaxy_info:
+  role_name: nginx
   author: Open Networking Foundation
   description: NGINX Web Server
   company: Open Networking Foundation
