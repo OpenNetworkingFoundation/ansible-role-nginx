@@ -10,6 +10,7 @@
 nginx_packages:
   - "nginx"
   - "python3-passlib"
+  - "procps"  # needed as debian initscripts call /bin/kill and others
 
 nginx_username: "www-data"
 nginx_groupname: "www-data"

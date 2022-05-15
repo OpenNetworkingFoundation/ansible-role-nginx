@@ -169,23 +169,24 @@
         mode: 0644
         create: true
 
-    - name: Run a python http.server as proxy target for 20 seconds in the background
+    - name: Run a python http.server as proxy target for 30 seconds in the background
+      become: true
       shell: >-
-        (cd /tmp;
-        python3 -m http.server & PY_PID=$!;
+        ( cd /tmp;
+        python3 -m http.server -b 127.0.0.1 8000 2> /tmp/pyhttp.log & PY_PID=$!;
         echo "server running: $PY_PID";
-        sleep 20;
+        sleep 30;
         kill $PY_PID) &
       tags:
         - skip_ansible_lint
 
-    - name: Wait 10 seconds for Python http.server to get started
+    - name: Wait 10 seconds for Python http.server to start
       pause:
         seconds: 10
 
     - name: Test that the proxy site is being served
       uri:
-        url: http://127.0.0.1
+        url: http://127.0.0.1/index.html
         headers:
           Host: "proxy.example.com"
         status_code: 200
@@ -193,10 +194,14 @@
       register: webpage
       failed_when: "'proxy.example.com' not in webpage.content"
 
-    - name: Delete proxy site test file
+    - name: Clean up proxy site testing files
+      become: true
       file:
-        path: "/tmp/index.html"
+        path: "/tmp/{{ item }}"
         state: absent
+      with_items:
+        - "index.html"
+        - "pyhttp.log"
 
     # Redirect tests
     - name: Check that 301 redirect is being served
